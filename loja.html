@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title id="loja-titulo">Cardápio Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    :root { --cor-primaria: #e11d48; }
+    .bg-primaria { background-color: var(--cor-primaria) !important; }
+    .text-primaria { color: var(--cor-primaria) !important; }
+    .border-primaria { border-color: var(--cor-primaria) !important; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-32">
+
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative">
+    
+    <!-- Topo Fixo com Logo e Status -->
+    <header class="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-100 z-30 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <img id="loja-logo" src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=150&q=80" class="w-10 h-10 rounded-xl object-cover border border-slate-100 shadow-xs" alt="Logo" />
+        <div>
+          <h1 id="loja-nome" class="font-extrabold text-sm text-slate-900 truncate">Carregando...</h1>
+          <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aberto para pedidos
+          </span>
+        </div>
+      </div>
+      <button id="btn-topo-sacola" class="relative p-2 rounded-xl bg-slate-100 text-slate-700">
+        🛍️ <span id="badge-sacola" class="bg-primaria text-white text-[10px] px-1.5 py-0.5 rounded-full font-black">0</span>
+      </button>
+    </header>
+
+    <!-- Carrossel de Banners Clicáveis (Promoções & Destaques) -->
+    <div class="p-4 pb-2">
+      <div class="relative h-44 rounded-2xl overflow-hidden shadow-md bg-slate-900 group cursor-pointer" id="banner-container">
+        <div id="banner-slides" class="flex transition-transform duration-500 ease-out h-full">
+          <!-- Injetado dinamicamente via JS -->
+        </div>
+        <div class="absolute bottom-2.5 inset-x-0 flex justify-center gap-1.5 z-10" id="banner-dots"></div>
+      </div>
+    </div>
+
+    <!-- Barra de Pesquisa -->
+    <div class="px-4 py-2">
+      <div class="relative">
+        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
+        <input type="text" id="input-busca" placeholder="Buscar no cardápio..." class="w-full bg-slate-100 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300" />
+      </div>
+    </div>
+
+    <!-- Menu Rolável Horizontal de Categorias (Chips) -->
+    <div class="sticky top-[61px] bg-white z-20 px-4 py-2 border-b border-slate-100 shadow-xs">
+      <div id="categorias-scroll" class="flex gap-2 overflow-x-auto no-scrollbar">
+        <button class="cat-pill active px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-primaria text-white shadow-xs" data-cat="todos">
+          Todos os Itens
+        </button>
+        <button class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-slate-100 text-slate-600" data-cat="Lanches">
+          🍔 Lanches
+        </button>
+        <button class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-slate-100 text-slate-600" data-cat="Pizzas">
+          🍕 Pizzas
+        </button>
+        <button class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-slate-100 text-slate-600" data-cat="Bebidas">
+          🥤 Bebidas
+        </button>
+        <button class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-slate-100 text-slate-600" data-cat="Sobremesas">
+          🍨 Sobremesas
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista de Itens -->
+    <main class="p-4 space-y-3" id="lista-produtos">
+      <div class="py-12 text-center text-slate-400 text-xs animate-pulse">Carregando cardápio...</div>
+    </main>
+
+  </div>
+
+  <!-- Modal de Opções do Produto (Tamanhos / Sabores / Adicionais) -->
+  <div id="modal-customizacao" class="fixed inset-0 bg-slate-950/60 z-50 flex flex-col justify-end backdrop-blur-xs hidden">
+    <div class="bg-white w-full max-w-md mx-auto rounded-t-3xl max-h-[85vh] flex flex-col shadow-2xl">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 id="modal-prod-nome" class="font-extrabold text-sm text-slate-900">Customizar Item</h3>
+          <span id="modal-prod-base" class="text-xs text-slate-500 font-semibold">R$ 0,00</span>
+        </div>
+        <button id="btn-fechar-custom" class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 font-bold text-xs">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+        <!-- Tamanhos -->
+        <div id="secao-tamanhos">
+          <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2">1. Escolha o Tamanho</label>
+          <div class="grid grid-cols-3 gap-2" id="grade-tamanhos">
+            <button type="button" class="opt-tamanho p-2 rounded-xl border text-center border-primaria bg-primaria text-white" data-tam="P" data-adic="0">
+              <span class="block text-xs font-black">Pequeno</span>
+              <span class="text-[10px] opacity-80">Padrão</span>
+            </button>
+            <button type="button" class="opt-tamanho p-2 rounded-xl border text-center border-slate-200 bg-slate-50 text-slate-700" data-tam="M" data-adic="8">
+              <span class="block text-xs font-black">Médio</span>
+              <span class="text-[10px] opacity-80">+R$ 8,00</span>
+            </button>
+            <button type="button" class="opt-tamanho p-2 rounded-xl border text-center border-slate-200 bg-slate-50 text-slate-700" data-tam="G" data-adic="15">
+              <span class="block text-xs font-black">Grande</span>
+              <span class="text-[10px] opacity-80">+R$ 15,00</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sabores -->
+        <div id="secao-sabores">
+          <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2">2. Escolha o Sabor</label>
+          <div class="space-y-1.5" id="lista-sabores">
+            <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+              <span class="text-xs font-bold text-slate-800">Tradicional da Casa</span>
+              <input type="radio" name="sabor" value="Tradicional da Casa" checked class="text-primaria" />
+            </label>
+            <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+              <span class="text-xs font-bold text-slate-800">4 Queijos Especial</span>
+              <input type="radio" name="sabor" value="4 Queijos Especial" class="text-primaria" />
+            </label>
+            <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+              <span class="text-xs font-bold text-slate-800">Frango com Catupiry</span>
+              <input type="radio" name="sabor" value="Frango com Catupiry" class="text-primaria" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Adicionais -->
+        <div>
+          <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2">3. Adicionais</label>
+          <div class="space-y-1.5">
+            <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+              <span class="text-xs font-bold text-slate-800">Bacon Crocante (+R$ 5,00)</span>
+              <input type="checkbox" class="chk-adicional" data-nome="Bacon Crocante" data-preco="5" />
+            </label>
+            <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+              <span class="text-xs font-bold text-slate-800">Queijo Cheddar Extra (+R$ 4,00)</span>
+              <input type="checkbox" class="chk-adicional" data-nome="Queijo Cheddar" data-preco="4" />
+            </label>
+            <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+              <span class="text-xs font-bold text-slate-800">Molho Especial (+R$ 3,00)</span>
+              <input type="checkbox" class="chk-adicional" data-nome="Molho Especial" data-preco="3" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Observações -->
+        <div>
+          <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-1">Alguma observação?</label>
+          <input type="text" id="obs-item" placeholder="Ex: Tirar cebola, maionese à parte..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-slate-300" />
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+        <div>
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Valor Total</span>
+          <span id="preco-item-final" class="font-black text-sm text-slate-900">R$ 0,00</span>
+        </div>
+        <button id="btn-confirmar-item" class="bg-primaria text-white font-extrabold text-xs px-5 py-3 rounded-xl shadow-md active:scale-95 transition">
+          Adicionar ao Pedido 🛍️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra Flutuante de Sacola -->
+  <div id="barra-checkout-fixa" class="fixed bottom-4 inset-x-4 max-w-md mx-auto z-40 hidden">
+    <div class="bg-slate-900 text-white rounded-2xl p-3.5 shadow-2xl flex items-center justify-between border border-slate-800 backdrop-blur-md">
+      <div class="flex items-center gap-3 pl-1">
+        <div class="w-9 h-9 rounded-xl bg-primaria flex items-center justify-center font-black text-xs text-white">
+          <span id="barra-qtd">0</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-400 uppercase font-semibold block">Ver Sacola</span>
+          <span id="barra-total" class="font-extrabold text-sm text-white">R$ 0,00</span>
+        </div>
+      </div>
+      <button id="btn-abrir-sacola" class="bg-primaria text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:opacity-90 active:scale-95 transition shadow">
+        Avançar ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet Drawer de Checkout Completo -->
+  <div id="modal-carrinho" class="fixed inset-0 bg-slate-950/60 z-50 flex flex-col justify-end backdrop-blur-xs hidden">
+    <div class="bg-white w-full max-w-md mx-auto rounded-t-3xl max-h-[90vh] flex flex-col shadow-2xl">
+      
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-extrabold text-base text-slate-900">Sua Sacola</h2>
+        <button id="btn-fechar-carrinho" class="text-xs font-bold text-slate-400 hover:text-slate-600 px-2 py-1">Fechar ✕</button>
+      </div>
+
+      <!-- Itens do Carrinho -->
+      <div id="carrinho-itens" class="flex-1 overflow-y-auto px-4 py-3 space-y-3 max-h-48 no-scrollbar"></div>
+
+      <!-- Seção "Peça Também" (Cross-sell) -->
+      <div class="px-4 py-2 bg-slate-50 border-t border-b border-slate-100">
+        <span class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block mb-1.5">🥤 Peça Também</span>
+        <div class="flex gap-2 overflow-x-auto no-scrollbar" id="cross-sell-itens"></div>
+      </div>
+
+      <!-- Formulário de Finalização & Cupom -->
+      <div class="p-4 bg-white space-y-3 overflow-y-auto max-h-[46vh]">
+        <div class="flex gap-2">
+          <input type="text" id="input-cupom" placeholder="CUPOM (ex: BEMVINDO10)" class="flex-1 uppercase bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
+          <button id="btn-aplicar-cupom" class="bg-slate-900 text-white font-bold text-xs px-3.5 py-2 rounded-xl">Aplicar</button>
+        </div>
+        <p id="msg-cupom" class="text-[10px] font-bold text-emerald-600 hidden">Cupom aplicado com sucesso (-10%)!</p>
+
+        <div class="space-y-2">
+          <input type="text" id="cli-nome" placeholder="Seu Nome Completo" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none" />
+          <input type="tel" id="cli-whats" placeholder="Seu WhatsApp (com DDD)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none" />
+
+          <div class="grid grid-cols-2 gap-2">
+            <select id="cli-tipo-entrega" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium">
+              <option value="Entrega">Delivery 🛵</option>
+              <option value="Retirada">Retirar no Balcão 🛍️</option>
+            </select>
+            <select id="cli-pagamento" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium">
+              <option value="PIX">PIX</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Dinheiro">Dinheiro</option>
+            </select>
+          </div>
+
+          <div id="campo-endereco">
+            <input type="text" id="cli-endereco" placeholder="Endereço (Rua, Nº, Bairro)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none" />
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-sm font-extrabold text-slate-900">
+          <span>Total</span>
+          <span id="carrinho-subtotal" class="text-base text-primaria">R$ 0,00</span>
+        </div>
+
+        <button id="btn-enviar-pedido" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2">
+          Confirmar e Enviar no WhatsApp 🚀
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="/src/vitrine.js"></script>
+</body>
+</html>
